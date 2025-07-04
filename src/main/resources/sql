@@ -1,0 +1,92 @@
+create database quan_ly_sach
+go
+use quan_ly_sach
+go
+CREATE TABLE the_loai (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+	ma_the_loai NVARCHAR(10) UNIQUE,
+    ten_the_loai NVARCHAR(100) UNIQUE
+);
+CREATE TABLE sach (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+	ma_sach NVARCHAR(10) UNIQUE,
+    ten_sach NVARCHAR(255) NOT NULL,
+    tac_gia NVARCHAR(100),
+    nha_xuat_ban NVARCHAR(100),
+    nam_phat_hanh INT,
+	so_luong INT,
+    the_loai_id INT,
+    trang_thai BIT DEFAULT 0,
+    FOREIGN KEY (the_loai_id) REFERENCES the_loai(id)
+);
+CREATE TABLE khach_hang (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+	ma_khach_hang NVARCHAR(10),
+    ten_khach_hang NVARCHAR(100) NOT NULL,
+	dia_chi NVARCHAR(200),
+    email NVARCHAR(100),
+    sdt NVARCHAR(20)
+);
+CREATE TABLE phieu_muon (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    khach_hang_id INT NOT NULL,
+	ma_phieu_muon NVARCHAR(10),
+    ngay_muon DATE NOT NULL,
+    ngay_tra DATE,
+    tran_thai BIT DEFAULT 0,
+    FOREIGN KEY (khach_hang_id) REFERENCES khach_hang(id)
+);
+CREATE TABLE phieu_muon_chi_tiet (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    phieu_muon_id INT NOT NULL,
+    sach_id INT NOT NULL,
+    ngay_het_han DATE NOT NULL,
+	so_luong_sach_muon INT,
+    FOREIGN KEY (phieu_muon_id) REFERENCES phieu_muon(id),
+    FOREIGN KEY (sach_id) REFERENCES sach(id)
+);
+
+INSERT INTO the_loai (ma_the_loai, ten_the_loai) VALUES
+('TL001', N'Tiểu thuyết'),
+('TL002', N'Khoa học'),
+('TL003', N'Lịch sử'),
+('TL004', N'Tâm lý'),
+('TL005', N'Thiếu nhi'),
+('TL006', N'Giáo trình'),
+('TL007', N'Công nghệ'),
+('TL008', N'Văn học'),
+('TL009', N'Truyện tranh'),
+('TL010', N'Lập trình');
+INSERT INTO sach (ma_sach, ten_sach, tac_gia, nha_xuat_ban, nam_phat_hanh, the_loai_id, trang_thai) VALUES
+('S001', N'Dế Mèn Phiêu Lưu Ký', N'Tô Hoài', N'NXB Kim Đồng', 1941, 5, 0),
+('S002', N'Truyện Kiều', N'Nguyễn Du', N'NXB Giáo Dục', 1820, 8, 0),
+('S003', N'Clean Code', N'Robert C. Martin', N'Prentice Hall', 2008, 10, 1),
+('S004', N'Đắc Nhân Tâm', N'Dale Carnegie', N'NXB Trẻ', 1936, 4, 1),
+('S005', N'Java Cơ Bản', N'Nguyễn Lập Trình', N'NXB Bách Khoa', 2020, 10, 0),
+('S006', N'Lược Sử Loài Người', N'Yuval Harari', N'NXB Thế Giới', 2011, 2, 0),
+('S007', N'Lập Trình Python', N'Nguyễn Văn A', N'NXB CNTT', 2019, 10, 0),
+('S008', N'Chuyện Xưa Tích Cũ', N'Ngô Văn', N'NXB Văn Học', 2000, 3, 0),
+('S009', N'Tâm Lý Học Hành Vi', N'Jordan B. Peterson', N'NXB Tâm Lý', 2015, 4, 0),
+('S010', N'Truyện Conan', N'Aoyama Gosho', N'Sunday Comics', 1994, 9, 1);
+INSERT INTO khach_hang (ma_khach_hang, ten_khach_hang, dia_chi, email, sdt) VALUES
+('KH001', N'Nguyễn Văn A', N'Hà Nội', 'a@gmail.com', '0901000001'),
+('KH002', N'Lê Thị B', N'Hồ Chí Minh', 'b@gmail.com', '0902000002'),
+('KH003', N'Trần Văn C', N'Đà Nẵng', 'c@gmail.com', '0903000003'),
+('KH004', N'Phạm Thị D', N'Hải Phòng', 'd@gmail.com', '0904000004'),
+('KH005', N'Hồ Văn E', N'Cần Thơ', 'e@gmail.com', '0905000005'),
+('KH006', N'Võ Thị F', N'Bình Dương', 'f@gmail.com', '0906000006'),
+('KH007', N'Ngô Văn G', N'Quảng Ninh', 'g@gmail.com', '0907000007'),
+('KH008', N'Đỗ Thị H', N'Nam Định', 'h@gmail.com', '0908000008'),
+('KH009', N'Tạ Văn I', N'Nghệ An', 'i@gmail.com', '0909000009'),
+('KH010', N'Bùi Thị J', N'Thái Bình', 'j@gmail.com', '0910000010');
+INSERT INTO phieu_muon (khach_hang_id, ma_phieu_muon, ngay_muon, ngay_tra, tran_thai) VALUES
+(1, 'PM001', '2025-06-01', '2025-06-05', 1),
+(2, 'PM002', '2025-06-02', NULL, 0),
+(3, 'PM003', '2025-06-03', '2025-06-06', 1),
+(4, 'PM004', '2025-06-04', NULL, 0),
+(5, 'PM005', '2025-06-05', '2025-06-10', 1),
+(6, 'PM006', '2025-06-06', NULL, 0),
+(7, 'PM007', '2025-06-07', '2025-06-08', 1),
+(8, 'PM008', '2025-06-08', NULL, 0),
+(9, 'PM009', '2025-06-09', NULL, 0),
+(10, 'PM010', '2025-06-10', NULL, 0);
