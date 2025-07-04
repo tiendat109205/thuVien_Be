@@ -14,7 +14,6 @@ public interface PhieuMuonChiTietService{
     List<PhieuMuonChiTietResponse> create(PhieuMuonChiTietRequest request);
     List<SachDaMuonResponse> getSachDaMuonTheoKH(Integer khachHangId);
     List<KhachDaMuonSachResponse> getKhachDaMuonSach(Integer sachId);
-    void delete(Integer id);
 
     @Transactional
     void traSach(Integer chiTietId, Integer soLuongTra);
