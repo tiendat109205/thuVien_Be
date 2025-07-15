@@ -43,11 +43,12 @@ public class SecurityConfig {
                         // ROLE_USER: chỉ được xem khách hàng và thao tác phiếu mượn
                         .requestMatchers(HttpMethod.GET, "/api/sach/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/khach-hang/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/khach-hang/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/phieu-muon/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/phieu-muon/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/phieu-muon-chi-tiet/**").hasAnyRole("USER", "ADMIN")
                         // ROLE_ADMIN: toàn quyền
-                        .requestMatchers("/api/**").hasRole("ADMIN")
+                        .requestMatchers("/api/**").hasAnyAuthority("ROLE_ADMIN")
                         // Mặc định phải xác thực
                         .anyRequest().authenticated()
                 )

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -25,7 +26,7 @@ public class KhachHangController {
     KhachHangService khachHangService;
 
     @GetMapping("/getAll")
-    public List<KhachHang> getAll() {
+    public List<KhachHangResponse> getAll() {
         return khachHangService.getAll();
     }
 
@@ -45,5 +46,11 @@ public class KhachHangController {
     public ResponseEntity<?> deleteKhachHang(@PathVariable Integer id) {
         khachHangService.deleteKhachHang(id);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/check-thong-tin")
+    public ResponseEntity<Boolean> checkThongTin(@RequestParam Integer taiKhoanId) {
+        boolean exists = khachHangService.daCoThongTinKhachHang(taiKhoanId);
+        return ResponseEntity.ok(exists);
     }
 }

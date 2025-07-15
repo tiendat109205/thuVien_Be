@@ -4,12 +4,18 @@ import com.example.quanlysach.dto.request.PhieuMuonRequest;
 import com.example.quanlysach.dto.response.PhieuMuonResponse;
 import com.example.quanlysach.entity.KhachHang;
 import com.example.quanlysach.entity.PhieuMuon;
+import com.example.quanlysach.entity.TaiKhoan;
 import com.example.quanlysach.repository.KhachHangRepository;
 import com.example.quanlysach.repository.PhieuMuonRepository;
+import com.example.quanlysach.repository.TaiKhoanRepoSitory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,6 +25,9 @@ public class PhieuMuonServiceImpl implements PhieuMuonService {
 
     @Autowired
     private KhachHangRepository khachHangRepository;
+    @Autowired
+    private TaiKhoanRepoSitory taiKhoanRepoSitory;
+
     @Override
     public List<PhieuMuonResponse> getAll() {
         return phieuMuonRepository.findAll().stream().map(PhieuMuonResponse::new).collect(Collectors.toList());

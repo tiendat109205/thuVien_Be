@@ -46,14 +46,21 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Sai tài khoản hoặc mật khẩu");
         }
 
+        // Lấy chi tiết user
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(loginRequest.getTenDangNhap());
         String token = jwtProvider.generateToken(userDetails);
         String role = userDetails.getAuthorities().iterator().next().getAuthority();
 
+        // ✅ Lấy ID tài khoản từ database
+        TaiKhoan taiKhoan = taiKhoanRepoSitory.findByTenDangNhap(userDetails.getUsername()).orElse(null);
+        Integer id = (taiKhoan != null) ? taiKhoan.getId() : null;
+
         System.out.println("Token: " + token);
 
-        return ResponseEntity.ok(new LoginResponse(token, userDetails.getUsername(), role));
+        // ✅ Trả về cả ID
+        return ResponseEntity.ok(new LoginResponse(token, userDetails.getUsername(), role, id));
     }
+
 
 
     @PostMapping("/register")
