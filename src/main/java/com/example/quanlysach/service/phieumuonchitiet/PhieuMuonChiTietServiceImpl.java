@@ -66,6 +66,7 @@ public class PhieuMuonChiTietServiceImpl implements PhieuMuonChiTietService {
     @Transactional
     public List<PhieuMuonChiTietResponse> create(PhieuMuonChiTietRequest request) {
         PhieuMuon phieuMuon = layPhieuMuon(request.getPhieuMuonId());
+        phieuMuon.setNgayMuon(new Date());
         List<PhieuMuonChiTietResponse> responses = new ArrayList<>();
 
         for (SachMuonRequest item : request.getSachChiTiet()) {
