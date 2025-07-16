@@ -5,15 +5,20 @@ import com.example.quanlysach.dto.request.SachMuonRequest;
 import com.example.quanlysach.dto.response.KhachDaMuonSachResponse;
 import com.example.quanlysach.dto.response.PhieuMuonChiTietResponse;
 import com.example.quanlysach.dto.response.SachDaMuonResponse;
+import com.example.quanlysach.entity.KhachHang;
 import com.example.quanlysach.entity.PhieuMuon;
 import com.example.quanlysach.entity.PhieuMuonChiTiet;
 import com.example.quanlysach.entity.Sach;
+import com.example.quanlysach.entity.TaiKhoan;
+import com.example.quanlysach.repository.KhachHangRepository;
 import com.example.quanlysach.repository.PhieuMuonChiTietRepository;
 import com.example.quanlysach.repository.PhieuMuonRepository;
 import com.example.quanlysach.repository.SachRepository;
+import com.example.quanlysach.repository.TaiKhoanRepoSitory;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -30,6 +35,10 @@ public class PhieuMuonChiTietServiceImpl implements PhieuMuonChiTietService {
     private PhieuMuonRepository phieuMuonRepository;
     @Autowired
     private SachRepository sachRepository;
+    @Autowired
+    private TaiKhoanRepoSitory taiKhoanRepoSitory;
+    @Autowired
+    private KhachHangRepository khachHangRepository;
 
     @Override
     public List<PhieuMuonChiTietResponse> getAll() {
@@ -65,15 +74,26 @@ public class PhieuMuonChiTietServiceImpl implements PhieuMuonChiTietService {
     @Override
     @Transactional
     public List<PhieuMuonChiTietResponse> create(PhieuMuonChiTietRequest request) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        TaiKhoan taiKhoan = taiKhoanRepoSitory.findByTenDangNhap(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không tìm thấy tài khoản"));
+        boolean isUser = taiKhoan.getVaiTro().equalsIgnoreCase("ROLE_USER");
+        KhachHang khachHang = null;
+        if (isUser) {
+            khachHang = khachHangRepository.findByTaiKhoan_Id(taiKhoan.getId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tài khoản chưa có thông tin khách hàng"));
+        }
         PhieuMuon phieuMuon = layPhieuMuon(request.getPhieuMuonId());
+        //Chỉ chặn nếu là USER mà phiếu không thuộc về họ
+        if (isUser && !phieuMuon.getKhachHang().getId().equals(khachHang.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bạn không có quyền thao tác trên phiếu mượn này.");
+        }
         phieuMuon.setNgayMuon(new Date());
         List<PhieuMuonChiTietResponse> responses = new ArrayList<>();
-
         for (SachMuonRequest item : request.getSachChiTiet()) {
-            Sach sach = xuLySachMuon(item); // Lấy và trừ số lượng
+            Sach sach = xuLySachMuon(item);
             PhieuMuonChiTiet chiTiet = taoHoacCapNhatChiTiet(phieuMuon, sach, item.getSoLuong(), request.getNgayHetHan());
             PhieuMuonChiTiet saved = phieuMuonChiTietRepository.save(chiTiet);
-
             PhieuMuonChiTietResponse response = new PhieuMuonChiTietResponse(chiTiet.getId(),
                     phieuMuon.getId(),
                     sach.getId(),
@@ -85,10 +105,8 @@ public class PhieuMuonChiTietServiceImpl implements PhieuMuonChiTietService {
                     chiTiet.getSoLuongSachMuon());
             responses.add(response);
         }
-
         phieuMuon.setTrangThai(false);
         phieuMuonRepository.save(phieuMuon);
-
         return responses;
     }
 
@@ -133,26 +151,35 @@ public class PhieuMuonChiTietServiceImpl implements PhieuMuonChiTietService {
     @Transactional
     @Override
     public void traSach(Integer chiTietId, Integer soLuongTra) {
-        // 1. Tìm chi tiết phiếu mượn
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        TaiKhoan taiKhoan = taiKhoanRepoSitory.findByTenDangNhap(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không tìm thấy tài khoản"));
+        // Kiểm tra nếu không phải admin → bắt buộc kiểm tra quyền sở hữu phiếu
+        boolean isAdmin = taiKhoan.getVaiTro().equalsIgnoreCase("ROLE_ADMIN");
+        // Tìm chi tiết phiếu mượn
         PhieuMuonChiTiet chiTiet = phieuMuonChiTietRepository.findById(chiTietId)
-                .orElseThrow(() -> new RuntimeException("Chi tiết phiếu mượn ID " + chiTietId + " không tồn tại"));
-        // 2. Trả sách về kho
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Chi tiết phiếu mượn không tồn tại"));
+        PhieuMuon phieuMuon = chiTiet.getPhieuMuon();
+        // Nếu là user thường thì chỉ được trả phiếu mượn của mình
+        if (!isAdmin) {
+            KhachHang khachHang = khachHangRepository.findByTaiKhoan_Id(taiKhoan.getId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tài khoản chưa có thông tin khách hàng"));
+            if (!phieuMuon.getKhachHang().getId().equals(khachHang.getId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền trả sách cho phiếu mượn này.");
+            }
+        }
+        //Cập nhật số lượng sách
         capNhatSoLuongSachSauKhiTra(chiTiet.getSach(), soLuongTra);
-
+        //Xử lý chi tiết phiếu
         xuLyChiTietPhieuMuonSauKhiTra(chiTiet, soLuongTra);
-
-        Integer phieuMuonId = chiTiet.getPhieuMuon().getId();
-        // 5. Kiểm tra xem phiếu mượn còn sách nào không
-        boolean conSach = phieuMuonChiTietRepository.existsByPhieuMuonId(phieuMuonId);
-        if (!conSach) {
-            // 6. Nếu không còn sách → cập nhật trạng thái đã trả hết
-            PhieuMuon phieuMuon = phieuMuonRepository.findById(phieuMuonId)
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu mượn ID: " + phieuMuonId));
+        //Nếu không còn sách mượn → cập nhật trạng thái phiếu
+        if (!phieuMuonChiTietRepository.existsByPhieuMuonId(phieuMuon.getId())) {
             phieuMuon.setTrangThai(true);
             phieuMuon.setNgayTra(new Date());
             phieuMuonRepository.save(phieuMuon);
         }
     }
+
 
     private void capNhatSoLuongSachSauKhiTra(Sach sach, Integer soLuongTra) {
         sach.setSoLuong(sach.getSoLuong() + soLuongTra);

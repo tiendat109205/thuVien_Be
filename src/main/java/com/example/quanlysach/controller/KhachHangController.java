@@ -2,9 +2,11 @@ package com.example.quanlysach.controller;
 
 import com.example.quanlysach.dto.request.KhachHangRequest;
 import com.example.quanlysach.dto.response.KhachHangResponse;
+import com.example.quanlysach.dto.response.PhieuMuonResponse;
 import com.example.quanlysach.entity.KhachHang;
 import com.example.quanlysach.service.khachhang.KhachHangService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,8 +18,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
+
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/khach-hang")
@@ -38,8 +43,15 @@ public class KhachHangController {
 
     @PutMapping("/update/{id}")
     public ResponseEntity<?> updateKhachHang(@RequestBody KhachHangRequest khachHang, @PathVariable Integer id) {
-        KhachHangResponse update = khachHangService.updateKhachHang(id, khachHang);
-        return ResponseEntity.ok(update);
+        try {
+            KhachHangResponse update = khachHangService.updateKhachHang(id, khachHang);
+            return ResponseEntity.ok(update);
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode()).body(Map.of("message", ex.getReason()));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Lỗi không xác định xảy ra"));
+        }
     }
 
     @DeleteMapping("/delete/{id}")

@@ -7,8 +7,10 @@ import com.example.quanlysach.entity.TaiKhoan;
 import com.example.quanlysach.repository.KhachHangRepository;
 import com.example.quanlysach.repository.TaiKhoanRepoSitory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -64,15 +66,36 @@ public class KhachHangServiceImpl implements KhachHangService {
 
     @Override
     public KhachHangResponse updateKhachHang(Integer id, KhachHangRequest khachHang) {
-        KhachHang kh = khachHangRepository.findById(id).orElseThrow(()->new RuntimeException("Khong tim thay id:"+id));
+        //Lấy người dùng hiện tại từ token
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        TaiKhoan taiKhoan = taiKhoanRepoSitory.findByTenDangNhap(username)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản"));
+        //Lấy khách hàng cần cập nhật
+        KhachHang kh = khachHangRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng với ID: " + id));
+        //Kiểm tra quyền truy cập
+        boolean isAdmin = taiKhoan.getVaiTro().equals("ROLE_ADMIN");
+        if (!isAdmin && !kh.getTaiKhoan().getId().equals(taiKhoan.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bạn không có quyền cập nhật thông tin khách hàng này.");
+        }
+        //Cập nhật thông tin
         kh.setMaKhachHang(khachHang.getMaKhachHang());
         kh.setTenKhachHang(khachHang.getTenKhachHang());
         kh.setDiaChi(khachHang.getDiaChi());
         kh.setEmail(khachHang.getEmail());
         kh.setSdt(khachHang.getSdt());
         KhachHang update = khachHangRepository.save(kh);
-        return new KhachHangResponse(update.getId(),update.getMaKhachHang(),update.getTenKhachHang(),update.getDiaChi(),update.getEmail(),update.getSdt(),update.getTaiKhoan().getId());
+        return new KhachHangResponse(
+                update.getId(),
+                update.getMaKhachHang(),
+                update.getTenKhachHang(),
+                update.getDiaChi(),
+                update.getEmail(),
+                update.getSdt(),
+                update.getTaiKhoan().getId()
+        );
     }
+
 
     @Override
     public void deleteKhachHang(Integer id) {
