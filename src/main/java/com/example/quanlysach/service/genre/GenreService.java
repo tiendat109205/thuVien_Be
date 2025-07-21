@@ -7,11 +7,11 @@ import com.example.quanlysach.entity.Genre;
 import java.util.List;
 
 public interface GenreService {
-    List<Genre> getAllTheLoai();
+    List<Genre> getAllGenre();
 
-    GenreResponse createTheLoai(GenreRequest theLoaiRequest);
+    GenreResponse createGenre(GenreRequest genreRequest);
 
-    GenreResponse updateTheLoai(Integer id, GenreRequest theLoaiRequest);
+    GenreResponse updateGenre(Integer id, GenreRequest genreRequest);
 
-    void deleteTheLoai(Integer id);
+    void deleteGenre(Integer id);
 }

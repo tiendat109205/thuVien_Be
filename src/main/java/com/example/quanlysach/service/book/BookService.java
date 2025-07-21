@@ -6,11 +6,11 @@ import com.example.quanlysach.dto.response.BookResponse;
 import java.util.List;
 
 public interface BookService {
-    List<BookResponse> getAllSach();
+    List<BookResponse> getAllBook();
 
-    BookResponse createSach(BookRequest sach);
+    BookResponse createBook(BookRequest bookRequest);
 
-    BookResponse updateSach(Integer id, BookRequest sach);
+    BookResponse updateBook(Integer id, BookRequest bookRequest);
 
-    void deleteSach(Integer id);
+    void deleteBook(Integer id);
 }

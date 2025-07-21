@@ -12,34 +12,34 @@ import java.util.List;
 @Service
 public class GenreServiceImpl implements GenreService {
     @Autowired
-    private GenreRepository theLoaiRepository;
+    private GenreRepository genreRepository;
 
     @Override
-    public List<Genre> getAllTheLoai(){
-        return theLoaiRepository.findAll();
+    public List<Genre> getAllGenre(){
+        return genreRepository.findAll();
     }
 
     @Override
-    public GenreResponse createTheLoai(GenreRequest theLoaiRequest) {
-        Genre theLoai = new Genre();
-        theLoai.setGenreCode(theLoaiRequest.getGenreCode());
-        theLoai.setGenreName(theLoaiRequest.getGenreName());
-        Genre save = theLoaiRepository.save(theLoai);
+    public GenreResponse createGenre(GenreRequest genreRequest) {
+        Genre genre = new Genre();
+        genre.setGenreCode(genreRequest.getGenreCode());
+        genre.setGenreName(genreRequest.getGenreName());
+        Genre save = genreRepository.save(genre);
         return new GenreResponse(save.getId(),save.getGenreCode(),save.getGenreName());
     }
 
     @Override
-    public GenreResponse updateTheLoai(Integer id, GenreRequest theLoaiRequest) {
-        Genre tl = theLoaiRepository.findById(id).orElseThrow(()->new RuntimeException("Khong tim thay id:"+id));
-        tl.setGenreCode(theLoaiRequest.getGenreCode());
-        tl.setGenreName(theLoaiRequest.getGenreName());
-        Genre update = theLoaiRepository.save(tl);
+    public GenreResponse updateGenre(Integer id, GenreRequest genreRequest) {
+        Genre genre = genreRepository.findById(id).orElseThrow(()->new RuntimeException("No id found:"+id));
+        genre.setGenreCode(genreRequest.getGenreCode());
+        genre.setGenreName(genreRequest.getGenreName());
+        Genre update = genreRepository.save(genre);
         return new GenreResponse(update.getId(),update.getGenreCode(),update.getGenreName());
     }
 
     @Override
-    public void deleteTheLoai(Integer id) {
-        Genre tl = theLoaiRepository.findById(id).orElseThrow(()->new RuntimeException("Khong tim thay id:"+id));
-        theLoaiRepository.delete(tl);
+    public void deleteGenre(Integer id) {
+        Genre tl = genreRepository.findById(id).orElseThrow(()->new RuntimeException("No id found:"+id));
+        genreRepository.delete(tl);
     }
 }

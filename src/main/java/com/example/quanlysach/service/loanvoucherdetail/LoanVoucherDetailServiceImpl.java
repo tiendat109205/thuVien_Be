@@ -30,22 +30,22 @@ import java.util.Optional;
 @Service
 public class LoanVoucherDetailServiceImpl implements LoanVoucherDetailService {
     @Autowired
-    private LoanVoucherDetailRepository phieuMuonChiTietRepository;
+    private LoanVoucherDetailRepository loanVoucherDetailRepository;
     @Autowired
-    private LoanVoucherRepository phieuMuonRepository;
+    private LoanVoucherRepository loanVoucherRepository;
     @Autowired
-    private BookRepository sachRepository;
+    private BookRepository bookRepository;
     @Autowired
-    private AccountRepoSitory taiKhoanRepoSitory;
+    private AccountRepoSitory accountRepoSitory;
     @Autowired
-    private CustomerRepository khachHangRepository;
+    private CustomerRepository customerRepository;
 
     @Override
     public List<LoanVoucherDetailResponse> getAll() {
-        List<LoanVoucherDetail> chiTietList = phieuMuonChiTietRepository.findAll();
+        List<LoanVoucherDetail> detailList = loanVoucherDetailRepository.findAll();
         List<LoanVoucherDetailResponse> responseList = new ArrayList<>();
 
-        for (LoanVoucherDetail ct : chiTietList) {
+        for (LoanVoucherDetail ct : detailList) {
             LoanVoucherDetailResponse res = new LoanVoucherDetailResponse();
             res.setId(ct.getId());
             res.setLoanVoucher(ct.getLoanVoucher().getId());
@@ -62,87 +62,87 @@ public class LoanVoucherDetailServiceImpl implements LoanVoucherDetailService {
     }
 
     @Override
-    public List<BookBorrowResponse> getSachDaMuonTheoKH(Integer khachHangId) {
-        return phieuMuonChiTietRepository.getSachDaMuonTheoKhachHang(khachHangId);
+    public List<BookBorrowResponse> getBookBorrow(Integer customerId) {
+        return loanVoucherDetailRepository.getBookBorrow(customerId);
     }
 
     @Override
-    public List<CustomerBorrowResponse> getKhachDaMuonSach(Integer sachId) {
-        return phieuMuonChiTietRepository.findKhachMuonTheoSach(sachId);
+    public List<CustomerBorrowResponse> getCustomerBorrow(Integer bookId) {
+        return loanVoucherDetailRepository.getCustomerBorrow(bookId);
     }
 
     @Override
     @Transactional
     public List<LoanVoucherDetailResponse> create(LoanVoucherDetailRequest request) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        Account taiKhoan = taiKhoanRepoSitory.findByUsername(username)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không tìm thấy tài khoản"));
-        boolean isUser = taiKhoan.getRole().equalsIgnoreCase("ROLE_USER");
-        Customer khachHang = null;
+        Account account = accountRepoSitory.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Account not found"));
+        boolean isUser = account.getRole().equalsIgnoreCase("ROLE_USER");
+        Customer customer = null;
         if (isUser) {
-            khachHang = khachHangRepository.findByAccount_Id(taiKhoan.getId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tài khoản chưa có thông tin khách hàng"));
+            customer = customerRepository.findByAccount_Id(account.getId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Account has no customer information"));
         }
-        LoanVoucher phieuMuon = layPhieuMuon(request.getLoanVoucherId());
+        LoanVoucher loanVoucher = getLoanVoucher(request.getLoanVoucherId());
         //Chỉ chặn nếu là USER mà phiếu không thuộc về họ
-        if (isUser && !phieuMuon.getCustomer().getId().equals(khachHang.getId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bạn không có quyền thao tác trên phiếu mượn này.");
+        if (isUser && !loanVoucher.getCustomer().getId().equals(customer.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You do not have permission to operate on this loan ticket..");
         }
-        phieuMuon.setBorrowDate(new Date());
+        loanVoucher.setBorrowDate(new Date());
         List<LoanVoucherDetailResponse> responses = new ArrayList<>();
         for (BookBorrowRequest item : request.getBookDetails()) {
-            Book sach = xuLySachMuon(item);
-            LoanVoucherDetail chiTiet = taoHoacCapNhatChiTiet(phieuMuon, sach, item.getQuantityBorrow(), request.getExpiryDate());
-            LoanVoucherDetail saved = phieuMuonChiTietRepository.save(chiTiet);
-            LoanVoucherDetailResponse response = new LoanVoucherDetailResponse(chiTiet.getId(),
-                    phieuMuon.getId(),
-                    sach.getId(),
-                    phieuMuon.getCustomer().getCustomerName(),
-                    sach.getBookName(),
-                    phieuMuon.getBorrowDate(),
-                    chiTiet.getExpiryDate(),
-                    sach.getQuantity(),
-                    chiTiet.getNumberBookBorrow());
+            Book book = bookBoroww(item);
+            LoanVoucherDetail detail = createOrUpdate(loanVoucher, book, item.getQuantityBorrow(), request.getExpiryDate());
+            LoanVoucherDetail saved = loanVoucherDetailRepository.save(detail);
+            LoanVoucherDetailResponse response = new LoanVoucherDetailResponse(detail.getId(),
+                    loanVoucher.getId(),
+                    book.getId(),
+                    loanVoucher.getCustomer().getCustomerName(),
+                    book.getBookName(),
+                    loanVoucher.getBorrowDate(),
+                    detail.getExpiryDate(),
+                    book.getQuantity(),
+                    detail.getNumberBookBorrow());
             responses.add(response);
         }
-        phieuMuon.setStatus(false);
-        phieuMuonRepository.save(phieuMuon);
+        loanVoucher.setStatus(false);
+        loanVoucherRepository.save(loanVoucher);
         return responses;
     }
 
 
-    private LoanVoucher layPhieuMuon(Integer phieuMuonId) {
-        return phieuMuonRepository.findById(phieuMuonId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu mượn"));
+    private LoanVoucher getLoanVoucher(Integer loanVoucherId) {
+        return loanVoucherRepository.findById(loanVoucherId)
+                .orElseThrow(() -> new RuntimeException("No loan slip found"));
     }
 
-    private Book xuLySachMuon(BookBorrowRequest item) {
-        Book sach = sachRepository.findById(item.getBookId())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy sách ID: " + item.getBookId()));
+    private Book bookBoroww(BookBorrowRequest item) {
+        Book book = bookRepository.findById(item.getBookId())
+                .orElseThrow(() -> new RuntimeException("No books found ID: " + item.getBookId()));
 
-        if (sach.getQuantity() < item.getQuantityBorrow()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không đủ số lượng sách: " + sach.getBookName());
+        if (book.getQuantity() < item.getQuantityBorrow()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Not enough books: " + book.getBookName());
         }
 
-        sach.setQuantity(sach.getQuantity() - item.getQuantityBorrow());
-        return sachRepository.save(sach);
+        book.setQuantity(book.getQuantity() - item.getQuantityBorrow());
+        return bookRepository.save(book);
     }
 
-    private LoanVoucherDetail taoHoacCapNhatChiTiet(LoanVoucher phieuMuon, Book sach, int soLuong, Date ngayHetHan) {
-        Optional<LoanVoucherDetail> optionalChiTiet =
-                phieuMuonChiTietRepository.findByLoanVoucherIdAndBookId(phieuMuon.getId(), sach.getId());
+    private LoanVoucherDetail createOrUpdate(LoanVoucher loanVoucher, Book book, int quantity, Date expiryDate) {
+        Optional<LoanVoucherDetail> optionalDetail =
+                loanVoucherDetailRepository.findByLoanVoucherIdAndBookId(loanVoucher.getId(), book.getId());
 
-        if (optionalChiTiet.isPresent()) {
-            LoanVoucherDetail chiTiet = optionalChiTiet.get();
-            chiTiet.setNumberBookBorrow(chiTiet.getNumberBookBorrow() + soLuong);
-            chiTiet.setExpiryDate(ngayHetHan);
-            return chiTiet;
+        if (optionalDetail.isPresent()) {
+            LoanVoucherDetail detail = optionalDetail.get();
+            detail.setNumberBookBorrow(detail.getNumberBookBorrow() + quantity);
+            detail.setExpiryDate(expiryDate);
+            return detail;
         } else {
             LoanVoucherDetail chiTiet = new LoanVoucherDetail();
-            chiTiet.setLoanVoucher(phieuMuon);
-            chiTiet.setBook(sach);
-            chiTiet.setExpiryDate(ngayHetHan);
-            chiTiet.setNumberBookBorrow(soLuong);
+            chiTiet.setLoanVoucher(loanVoucher);
+            chiTiet.setBook(book);
+            chiTiet.setExpiryDate(expiryDate);
+            chiTiet.setNumberBookBorrow(quantity);
             return chiTiet;
         }
     }
@@ -150,48 +150,47 @@ public class LoanVoucherDetailServiceImpl implements LoanVoucherDetailService {
 
     @Transactional
     @Override
-    public void traSach(Integer chiTietId, Integer soLuongTra) {
+    public void returnBook(Integer id, Integer quantity) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        Account taiKhoan = taiKhoanRepoSitory.findByUsername(username)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không tìm thấy tài khoản"));
+        Account account = accountRepoSitory.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,"Account not found"));
         // Kiểm tra nếu không phải admin → bắt buộc kiểm tra quyền sở hữu phiếu
-        boolean isAdmin = taiKhoan.getRole().equalsIgnoreCase("ROLE_ADMIN");
+        boolean isAdmin = account.getRole().equalsIgnoreCase("ROLE_ADMIN");
         // Tìm chi tiết phiếu mượn
-        LoanVoucherDetail chiTiet = phieuMuonChiTietRepository.findById(chiTietId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Chi tiết phiếu mượn không tồn tại"));
-        LoanVoucher phieuMuon = chiTiet.getLoanVoucher();
+        LoanVoucherDetail detail = loanVoucherDetailRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Loan details do not exist"));
+        LoanVoucher loanVoucher = detail.getLoanVoucher();
         // Nếu là user thường thì chỉ được trả phiếu mượn của mình
         if (!isAdmin) {
-            Customer khachHang = khachHangRepository.findByAccount_Id(taiKhoan.getId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tài khoản chưa có thông tin khách hàng"));
-            if (!phieuMuon.getCustomer().getId().equals(khachHang.getId())) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền trả sách cho phiếu mượn này.");
+            Customer customer = customerRepository.findByAccount_Id(account.getId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,"Account has no customer information"));
+            if (!loanVoucher.getCustomer().getId().equals(customer.getId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not authorized to return the book for this loan.");
             }
         }
         //Cập nhật số lượng sách
-        capNhatSoLuongSachSauKhiTra(chiTiet.getBook(), soLuongTra);
+        returnQuanTityBook(detail.getBook(), quantity);
         //Xử lý chi tiết phiếu
-        xuLyChiTietPhieuMuonSauKhiTra(chiTiet, soLuongTra);
+        returnLoanVoucherDetail(detail, quantity);
         //Nếu không còn sách mượn → cập nhật trạng thái phiếu
-        if (!phieuMuonChiTietRepository.existsByLoanVoucherId(phieuMuon.getId())) {
-            phieuMuon.setStatus(true);
-            phieuMuon.setReturnDate(new Date());
-            phieuMuonRepository.save(phieuMuon);
+        if (!loanVoucherDetailRepository.existsByLoanVoucherId(loanVoucher.getId())) {
+            loanVoucher.setStatus(true);
+            loanVoucher.setReturnDate(new Date());
+            loanVoucherRepository.save(loanVoucher);
         }
     }
 
-
-    private void capNhatSoLuongSachSauKhiTra(Book sach, Integer soLuongTra) {
-        sach.setQuantity(sach.getQuantity() + soLuongTra);
-        sachRepository.save(sach);
+    private void returnQuanTityBook(Book book, Integer quantityBorrow) {
+        book.setQuantity(book.getQuantity() + quantityBorrow);
+        bookRepository.save(book);
     }
 
-    private void xuLyChiTietPhieuMuonSauKhiTra(LoanVoucherDetail chiTiet, Integer soLuongTra) {
-        if (soLuongTra < chiTiet.getNumberBookBorrow()) {
-            chiTiet.setNumberBookBorrow(chiTiet.getNumberBookBorrow() - soLuongTra);
-            phieuMuonChiTietRepository.save(chiTiet);
+    private void returnLoanVoucherDetail(LoanVoucherDetail detail, Integer quantityBorrow) {
+        if (quantityBorrow < detail.getNumberBookBorrow()) {
+            detail.setNumberBookBorrow(detail.getNumberBookBorrow() - quantityBorrow);
+            loanVoucherDetailRepository.save(detail);
         } else {
-            phieuMuonChiTietRepository.deleteById(chiTiet.getId());
+            loanVoucherDetailRepository.deleteById(detail.getId());
         }
     }
 

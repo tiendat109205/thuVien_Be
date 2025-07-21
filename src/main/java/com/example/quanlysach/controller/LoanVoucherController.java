@@ -25,33 +25,33 @@ import java.util.Map;
 @RequestMapping("/api/phieu-muon")
 public class LoanVoucherController {
     @Autowired
-    LoanVoucherService phieuMuonService;
+    LoanVoucherService loanVoucherService;
 
     @GetMapping("/getAll")
     public List<LoanVoucherResponse> getAll() {
-        return phieuMuonService.getAll();
+        return loanVoucherService.getAll();
     }
     @PostMapping("/add")
-    public ResponseEntity<?> createPhieuMuon(@RequestBody LoanVoucherRequest request) {
+    public ResponseEntity<?> createLoanVoucher(@RequestBody LoanVoucherRequest request) {
         try {
-            LoanVoucherResponse response = phieuMuonService.create(request);
+            LoanVoucherResponse response = loanVoucherService.create(request);
             return ResponseEntity.ok(response);
         } catch (ResponseStatusException ex) {
             return ResponseEntity.status(ex.getStatusCode()).body(Map.of("message", ex.getReason()));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("message", "Lỗi không xác định xảy ra"));
+                    .body(Map.of("message", "An unknown error occurred"));
         }
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<?> update(@PathVariable Integer id, @RequestBody LoanVoucherRequest pm) {
-        LoanVoucherResponse update = phieuMuonService.update(id, pm);
+    public ResponseEntity<?> update(@PathVariable Integer id, @RequestBody LoanVoucherRequest loanVoucherRequest) {
+        LoanVoucherResponse update = loanVoucherService.update(id, loanVoucherRequest);
         return ResponseEntity.ok(update);
     }
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> delete(@PathVariable Integer id) {
-        phieuMuonService.delete(id);
+        loanVoucherService.delete(id);
         return ResponseEntity.ok().build();
     }
 }

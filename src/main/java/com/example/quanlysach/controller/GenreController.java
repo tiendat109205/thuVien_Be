@@ -23,25 +23,25 @@ import java.util.List;
 @RequestMapping("/api/the-loai")
 public class GenreController {
     @Autowired
-    GenreService theLoaiService;
+    GenreService genreService;
 
     @GetMapping("/getAll")
-    public List<Genre> getAllTheLoai() {
-        return theLoaiService.getAllTheLoai();
+    public List<Genre> getAllGenre() {
+        return genreService.getAllGenre();
     }
     @PostMapping("/add")
-    public ResponseEntity<?> addTheLoai(@RequestBody GenreRequest theLoaiRequest) {
-        GenreResponse result = theLoaiService.createTheLoai(theLoaiRequest);
+    public ResponseEntity<?> addGenre(@RequestBody GenreRequest genreRequest) {
+        GenreResponse result = genreService.createGenre(genreRequest);
         return new ResponseEntity<>(result, HttpStatus.CREATED);
     }
     @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateTheLoai(@RequestBody GenreRequest theLoaiRequest, @PathVariable Integer id) {
-        GenreResponse result = theLoaiService.updateTheLoai(id, theLoaiRequest);
+    public ResponseEntity<?> updateGenre(@RequestBody GenreRequest genreRequest, @PathVariable Integer id) {
+        GenreResponse result = genreService.updateGenre(id, genreRequest);
         return ResponseEntity.ok(result);
     }
     @DeleteMapping("/detele/{id}")
-    public ResponseEntity<Genre> deleteTheLoai(@PathVariable Integer id) {
-        theLoaiService.deleteTheLoai(id);
+    public ResponseEntity<Genre> deleteGenre(@PathVariable Integer id) {
+        genreService.deleteGenre(id);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }

@@ -22,27 +22,27 @@ import java.util.List;
 @RequestMapping("/api/sach")
 public class BookController {
     @Autowired
-    BookService sachService;
+    BookService bookService;
 
     @GetMapping("/getAll")
-    public List<BookResponse> getAllSach() {
-        return sachService.getAllSach();
+    public List<BookResponse> getAllBook() {
+        return bookService.getAllBook();
     }
 
     @PostMapping("/add")
-    public ResponseEntity<?> addSach(@RequestBody BookRequest sach) {
-        BookResponse s = sachService.createSach(sach);
+    public ResponseEntity<?> addBook(@RequestBody BookRequest bookRequest) {
+        BookResponse s = bookService.createBook(bookRequest);
         return new ResponseEntity<>(s, HttpStatus.CREATED);
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateSach(@PathVariable Integer id, @RequestBody BookRequest sach) {
-        BookResponse s = sachService.updateSach(id,sach);
+    public ResponseEntity<?> updateBook(@PathVariable Integer id, @RequestBody BookRequest bookRequest) {
+        BookResponse s = bookService.updateBook(id,bookRequest);
         return new ResponseEntity<>(s, HttpStatus.OK);
     }
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deleteSach(@PathVariable Integer id) {
-        sachService.deleteSach(id);
+    public ResponseEntity<?> deleteBook(@PathVariable Integer id) {
+        bookService.deleteBook(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

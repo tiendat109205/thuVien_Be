@@ -29,7 +29,7 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtProvider jwtProvider;
-    private final AccountRepoSitory taiKhoanRepoSitory;
+    private final AccountRepoSitory accountRepoSitory;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
@@ -43,7 +43,7 @@ public class AuthController {
             System.out.println("Xác thực thành công");
         } catch (AuthenticationException e) {
             System.out.println("Xác thực thất bại: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Sai tài khoản hoặc mật khẩu");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Wrong account or password");
         }
 
         // Lấy chi tiết user
@@ -52,8 +52,8 @@ public class AuthController {
         String role = userDetails.getAuthorities().iterator().next().getAuthority();
 
         // ✅ Lấy ID tài khoản từ database
-        Account taiKhoan = taiKhoanRepoSitory.findByUsername(userDetails.getUsername()).orElse(null);
-        Integer id = (taiKhoan != null) ? taiKhoan.getId() : null;
+        Account account = accountRepoSitory.findByUsername(userDetails.getUsername()).orElse(null);
+        Integer id = (account != null) ? account.getId() : null;
 
         System.out.println("Token: " + token);
 
@@ -65,14 +65,14 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest registerRequest) {
-        if(taiKhoanRepoSitory.findByUsername(registerRequest.getUsername()).isPresent()){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Ten dang nhap da ton tai");
+        if(accountRepoSitory.findByUsername(registerRequest.getUsername()).isPresent()){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Login name already exists");
         }
-        Account tk = new Account();
-        tk.setUsername(registerRequest.getUsername());
-        tk.setPassword(new BCryptPasswordEncoder().encode(registerRequest.getPassword()));
-        tk.setRole("ROLE_USER");
-        taiKhoanRepoSitory.save(tk);
-        return ResponseEntity.ok("Dang ky thanh cong");
+        Account account = new Account();
+        account.setUsername(registerRequest.getUsername());
+        account.setPassword(new BCryptPasswordEncoder().encode(registerRequest.getPassword()));
+        account.setRole("ROLE_USER");
+        accountRepoSitory.save(account);
+        return ResponseEntity.ok("Registration successful");
     }
 }

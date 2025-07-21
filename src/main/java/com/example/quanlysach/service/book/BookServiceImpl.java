@@ -15,51 +15,51 @@ import java.util.stream.Collectors;
 @Service
 public class BookServiceImpl implements BookService {
     @Autowired
-    BookRepository sachRepository;
+    BookRepository bookRepository;
 
     @Autowired
-    GenreRepository theLoaiRepository;
+    GenreRepository genreRepository;
 
     @Override
-    public List<BookResponse> getAllSach() {
-        return sachRepository.getAll().stream().map(BookResponse::new).collect(Collectors.toList());
+    public List<BookResponse> getAllBook() {
+        return bookRepository.getAll().stream().map(BookResponse::new).collect(Collectors.toList());
     }
 
     @Override
-    public BookResponse createSach(BookRequest sach) {
-        Genre theLoai = theLoaiRepository.findById(sach.getGenre()).orElseThrow(()-> new RuntimeException("Khong tim thay the loai"));
-        Book s = new Book();
-        s.setBookCode(sach.getBookCode());
-        s.setBookName(sach.getBookName());
-        s.setAuthor(sach.getAuthor());
-        s.setPublisher(sach.getPublisher());
-        s.setYearToRelease(sach.getYearToRelease());
-        s.setGenre(theLoai);
-        s.setStatus(sach.getStatus());
-        s.setQuantity(sach.getQuantity());
-        Book save = sachRepository.save(s);
+    public BookResponse createBook(BookRequest bookRequest) {
+        Genre genre = genreRepository.findById(bookRequest.getGenre()).orElseThrow(()-> new RuntimeException("No genre found"));
+        Book book = new Book();
+        book.setBookCode(bookRequest.getBookCode());
+        book.setBookName(bookRequest.getBookName());
+        book.setAuthor(bookRequest.getAuthor());
+        book.setPublisher(bookRequest.getPublisher());
+        book.setYearToRelease(bookRequest.getYearToRelease());
+        book.setGenre(genre);
+        book.setStatus(bookRequest.getStatus());
+        book.setQuantity(bookRequest.getQuantity());
+        Book save = bookRepository.save(book);
         return new BookResponse(save.getId(),save.getBookCode(),save.getBookName(),save.getAuthor(),save.getPublisher(),save.getYearToRelease(),save.getGenre().getGenreName(),save.getStatus(),save.getQuantity());
     }
 
     @Override
-    public BookResponse updateSach(Integer id, BookRequest sach) {
-        Genre theLoai = theLoaiRepository.findById(sach.getGenre()).orElseThrow(()-> new RuntimeException("Khong tim thay the loai"));
-        Book s = sachRepository.findById(id).orElseThrow(()-> new RuntimeException("Khong tim id sach"+id));
-        s.setBookCode(sach.getBookCode());
-        s.setBookName(sach.getBookName());
-        s.setAuthor(sach.getAuthor());
-        s.setPublisher(sach.getPublisher());
-        s.setYearToRelease(sach.getYearToRelease());
-        s.setGenre(theLoai);
-        s.setStatus(sach.getStatus());
-        s.setQuantity(sach.getQuantity());
-        Book update = sachRepository.save(s);
+    public BookResponse updateBook(Integer id, BookRequest bookRequest) {
+        Genre genre = genreRepository.findById(bookRequest.getGenre()).orElseThrow(()-> new RuntimeException("No genre found"));
+        Book book = bookRepository.findById(id).orElseThrow(()-> new RuntimeException("Cannot find book id"+id));
+        book.setBookCode(bookRequest.getBookCode());
+        book.setBookName(bookRequest.getBookName());
+        book.setAuthor(bookRequest.getAuthor());
+        book.setPublisher(bookRequest.getPublisher());
+        book.setYearToRelease(bookRequest.getYearToRelease());
+        book.setGenre(genre);
+        book.setStatus(bookRequest.getStatus());
+        book.setQuantity(bookRequest.getQuantity());
+        Book update = bookRepository.save(book);
         return new BookResponse(update);
     }
 
     @Override
-    public void deleteSach(Integer id) {
-        Book s = sachRepository.findById(id).orElseThrow(()-> new RuntimeException("Khong tim thay id sach"+id));
-        sachRepository.delete(s);
+    public void deleteBook(Integer id) {
+        Book s = bookRepository.findById(id).orElseThrow(()-> new RuntimeException("Can't find id book"+id));
+        bookRepository.delete(s);
     }
 }

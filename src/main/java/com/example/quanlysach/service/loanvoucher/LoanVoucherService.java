@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface LoanVoucherService {
     List<LoanVoucherResponse> getAll();
-    LoanVoucherResponse create(LoanVoucherRequest phieuMuonRequest);
-    LoanVoucherResponse update(Integer id, LoanVoucherRequest phieuMuonRequest);
+    LoanVoucherResponse create(LoanVoucherRequest loanVoucherRequestRequest);
+    LoanVoucherResponse update(Integer id, LoanVoucherRequest loanVoucherRequest);
     void delete(Integer id);
 }

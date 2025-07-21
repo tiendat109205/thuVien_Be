@@ -12,7 +12,7 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer> {
     @Query(value = "select *from phieu_muon",nativeQuery = true)
     List<LoanVoucher> getAll();
 
-    boolean existsByAccount_Id(Integer taiKhoanId);
-    Optional<Customer> findByAccount_Id(Integer taiKhoanId);
+    boolean existsByAccount_Id(Integer accountId);
+    Optional<Customer> findByAccount_Id(Integer accountId);
 
 }

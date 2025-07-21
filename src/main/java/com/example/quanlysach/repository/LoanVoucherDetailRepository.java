@@ -29,7 +29,7 @@ public interface LoanVoucherDetailRepository extends JpaRepository<LoanVoucherDe
         JOIN pm.customer kh
         JOIN pmct.book s
     """)
-    List<LoanVoucherDetailResponse> getAllChiTietPhieuMuon();
+    List<LoanVoucherDetailResponse> getAllLoanVoucherDetail();
 
     @Query("""
         SELECT new com.example.quanlysach.dto.response.BookBorrowResponse(
@@ -39,9 +39,9 @@ public interface LoanVoucherDetailRepository extends JpaRepository<LoanVoucherDe
         JOIN pmct.book s
         JOIN pmct.loanVoucher pm
         JOIN pm.customer kh
-        WHERE kh.id = :khachHangId
+        WHERE kh.id = :customerId
     """)
-    List<BookBorrowResponse> getSachDaMuonTheoKhachHang(@Param("khachHangId") Integer khachHangId);
+    List<BookBorrowResponse> getBookBorrow(@Param("customerId") Integer customerId);
 
     @Query("""
     SELECT new com.example.quanlysach.dto.response.CustomerBorrowResponse(
@@ -50,13 +50,13 @@ public interface LoanVoucherDetailRepository extends JpaRepository<LoanVoucherDe
         FROM LoanVoucherDetail pmct
         JOIN pmct.loanVoucher pm
         JOIN pm.customer kh
-        WHERE pmct.book.id = :sachId
+        WHERE pmct.book.id = :bookId
     """)
-    List<CustomerBorrowResponse> findKhachMuonTheoSach(@Param("sachId") Integer sachId);
-    boolean existsByLoanVoucherId(Integer phieuMuonId);
+    List<CustomerBorrowResponse> getCustomerBorrow(@Param("bookId") Integer bookId);
+    boolean existsByLoanVoucherId(Integer loanVoucherId);
 
-    boolean existsByLoanVoucherIdAndBookId(Integer phieuMuonId, Integer sachId);
+    boolean existsByLoanVoucherIdAndBookId(Integer loanVoucherId, Integer bookId);
 
-    Optional<LoanVoucherDetail> findByLoanVoucherIdAndBookId(Integer phieuMuonId, Integer sachId);
+    Optional<LoanVoucherDetail> findByLoanVoucherIdAndBookId(Integer loanVoucherId, Integer bookId);
 
 }

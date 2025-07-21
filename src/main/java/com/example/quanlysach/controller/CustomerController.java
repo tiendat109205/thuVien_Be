@@ -29,48 +29,48 @@ import java.util.Optional;
 @RequestMapping("/api/khach-hang")
 public class CustomerController {
     @Autowired
-    CustomerService khachHangService;
+    CustomerService customerService;
     @Autowired
-    private AccountRepoSitory taiKhoanRepoSitory;
+    private AccountRepoSitory accountRepoSitory;
 
     @GetMapping("/getAll")
     public List<CustomerResponse> getAll() {
-        return khachHangService.getAll();
+        return customerService.getAll();
     }
 
     @PostMapping("/add")
-    public ResponseEntity<?> addKhachHang(@RequestBody CustomerRequest khachHang) {
-        CustomerResponse add = khachHangService.createKhachHang(khachHang);
+    public ResponseEntity<?> addCustomer(@RequestBody CustomerRequest customerRequest) {
+        CustomerResponse add = customerService.createCustomer(customerRequest);
         return ResponseEntity.ok(add);
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateKhachHang(@RequestBody CustomerRequest khachHang, @PathVariable Integer id) {
+    public ResponseEntity<?> updateCustomer(@RequestBody CustomerRequest customerRequest, @PathVariable Integer id) {
         try {
-            CustomerResponse update = khachHangService.updateKhachHang(id, khachHang);
+            CustomerResponse update = customerService.updateCustomer(id, customerRequest);
             return ResponseEntity.ok(update);
         } catch (ResponseStatusException ex) {
             return ResponseEntity.status(ex.getStatusCode()).body(Map.of("message", ex.getReason()));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("message", "Lỗi không xác định xảy ra"));
+                    .body(Map.of("message", "An unknown error occurred"));
         }
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deleteKhachHang(@PathVariable Integer id) {
-        khachHangService.deleteKhachHang(id);
+    public ResponseEntity<?> deleteCustomer(@PathVariable Integer id) {
+        customerService.deleteCustomer(id);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/check-thong-tin")
-    public ResponseEntity<?> checkThongTin() {
+    public ResponseEntity<?> checkInfomation() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        Optional<Account> taiKhoan = taiKhoanRepoSitory.findByUsername(username);
-        if (taiKhoan.isEmpty()) return ResponseEntity.ok(false);
+        Optional<Account> account = accountRepoSitory.findByUsername(username);
+        if (account.isEmpty()) return ResponseEntity.ok(false);
 
-        boolean exists = khachHangService.daCoThongTinKhachHang(taiKhoan.get().getId());
+        boolean exists = customerService.checkInfomation(account.get().getId());
         return ResponseEntity.ok(exists);
     }
 

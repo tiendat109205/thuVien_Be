@@ -7,9 +7,9 @@ import java.util.List;
 
 public interface CustomerService {
     List<CustomerResponse> getAll();
-    CustomerResponse createKhachHang(CustomerRequest khachHang);
-    CustomerResponse updateKhachHang(Integer id, CustomerRequest khachHang);
-    void deleteKhachHang(Integer id);
+    CustomerResponse createCustomer(CustomerRequest customerRequest);
+    CustomerResponse updateCustomer(Integer id, CustomerRequest customerRequest);
+    void deleteCustomer(Integer id);
 
-    boolean daCoThongTinKhachHang(Integer taiKhoanId);
+    boolean checkInfomation(Integer accountId);
 }

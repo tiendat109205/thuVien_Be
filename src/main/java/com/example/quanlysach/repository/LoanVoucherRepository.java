@@ -8,5 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface LoanVoucherRepository extends JpaRepository<LoanVoucher, Integer> {
-    Optional<LoanVoucher> findByCustomerId(Integer khachHangId);
+    Optional<LoanVoucher> findByCustomerId(Integer customerId);
 }

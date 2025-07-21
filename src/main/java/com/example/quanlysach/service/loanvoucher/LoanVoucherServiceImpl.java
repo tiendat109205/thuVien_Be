@@ -23,41 +23,41 @@ import java.util.stream.Collectors;
 @Service
 public class LoanVoucherServiceImpl implements LoanVoucherService {
     @Autowired
-    private LoanVoucherRepository phieuMuonRepository;
+    private LoanVoucherRepository loanVoucherRepository;
 
     @Autowired
-    private CustomerRepository khachHangRepository;
+    private CustomerRepository customerRepository;
     @Autowired
-    private AccountRepoSitory taiKhoanRepoSitory;
+    private AccountRepoSitory accountRepoSitory;
 
     @Override
     public List<LoanVoucherResponse> getAll() {
-        return phieuMuonRepository.findAll().stream().map(LoanVoucherResponse::new).collect(Collectors.toList());
+        return loanVoucherRepository.findAll().stream().map(LoanVoucherResponse::new).collect(Collectors.toList());
     }
 
     @Override
-    public LoanVoucherResponse create(LoanVoucherRequest phieuMuonRequest) {
+    public LoanVoucherResponse create(LoanVoucherRequest loanVoucherRequest) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
         // Tìm tài khoản
-        Account taiKhoan = taiKhoanRepoSitory.findByUsername(username)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không tìm thấy tài khoản"));
-        System.out.println("aaaaaa"+taiKhoan);
+        Account account = accountRepoSitory.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Account not found"));
+        System.out.println("aaaaaa"+account);
         // Tìm khách hàng gắn với tài khoản đó
-        Customer khachHang = khachHangRepository.findByAccount_Id(taiKhoan.getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tài khoản chưa có thông tin khách hàng"));
+        Customer customer = customerRepository.findByAccount_Id(account.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Account has no customer information"));
         // Kiểm tra đã có phiếu mượn đang hoạt động chưa
-        Optional<LoanVoucher> existing = phieuMuonRepository.findByCustomerId(khachHang.getId());
+        Optional<LoanVoucher> existing = loanVoucherRepository.findByCustomerId(customer.getId());
         if (existing.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Khách hàng đã có phiếu mượn.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The customer has a loan voucher..");
         }
         // Tạo phiếu mượn mới
-        LoanVoucher phieuMuon = new LoanVoucher();
-        phieuMuon.setCustomer(khachHang);
-        phieuMuon.setLoanVoucherCode(generateMaPhieuMuon());
-        phieuMuon.setBorrowDate(new Date());
-        phieuMuon.setStatus(true);
-        LoanVoucher save = phieuMuonRepository.save(phieuMuon);
+        LoanVoucher loanVoucher = new LoanVoucher();
+        loanVoucher.setCustomer(customer);
+        loanVoucher.setLoanVoucherCode(generateMaPhieuMuon());
+        loanVoucher.setBorrowDate(new Date());
+        loanVoucher.setStatus(true);
+        LoanVoucher save = loanVoucherRepository.save(loanVoucher);
         return new LoanVoucherResponse(save);
     }
 
@@ -66,21 +66,21 @@ public class LoanVoucherServiceImpl implements LoanVoucherService {
         return "PM-" + numbers;
     }
     @Override
-    public LoanVoucherResponse update(Integer id, LoanVoucherRequest phieuMuonRequest) {
-        Customer khId= khachHangRepository.findById(phieuMuonRequest.getCustomer()).orElseThrow(()->new RuntimeException("Khong tim thay khach hang"));
-        LoanVoucher pm = phieuMuonRepository.findById(id).orElseThrow(()->new RuntimeException("Khong tim thay id"+id));
-        pm.setCustomer(khId);
-        pm.setLoanVoucherCode(phieuMuonRequest.getLoanVoucherCode());
-        pm.setBorrowDate(phieuMuonRequest.getBorrowDate());
-        pm.setReturnDate(phieuMuonRequest.getReturnDate());
-        pm.setStatus(phieuMuonRequest.getStatus());
-        LoanVoucher update = phieuMuonRepository.save(pm);
+    public LoanVoucherResponse update(Integer id, LoanVoucherRequest loanVoucherRequest) {
+        Customer customerId= customerRepository.findById(loanVoucherRequest.getCustomer()).orElseThrow(()->new RuntimeException("No customers found"));
+        LoanVoucher loanVoucher = loanVoucherRepository.findById(id).orElseThrow(()->new RuntimeException("Can't find id"+id));
+        loanVoucher.setCustomer(customerId);
+        loanVoucher.setLoanVoucherCode(loanVoucherRequest.getLoanVoucherCode());
+        loanVoucher.setBorrowDate(loanVoucherRequest.getBorrowDate());
+        loanVoucher.setReturnDate(loanVoucherRequest.getReturnDate());
+        loanVoucher.setStatus(loanVoucherRequest.getStatus());
+        LoanVoucher update = loanVoucherRepository.save(loanVoucher);
         return new LoanVoucherResponse(update);
     }
 
     @Override
     public void delete(Integer id) {
-        LoanVoucher pm = phieuMuonRepository.findById(id).orElseThrow(()->new RuntimeException("Khong tim thay id"+id));
-        phieuMuonRepository.deleteById(id);
+        LoanVoucher loanVoucher = loanVoucherRepository.findById(id).orElseThrow(()->new RuntimeException("Can't find id"+id));
+        loanVoucherRepository.deleteById(id);
     }
 }

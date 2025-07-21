@@ -11,9 +11,9 @@ import java.util.List;
 public interface LoanVoucherDetailService {
     List<LoanVoucherDetailResponse> getAll();
     List<LoanVoucherDetailResponse> create(LoanVoucherDetailRequest request);
-    List<BookBorrowResponse> getSachDaMuonTheoKH(Integer khachHangId);
-    List<CustomerBorrowResponse> getKhachDaMuonSach(Integer sachId);
+    List<BookBorrowResponse> getBookBorrow(Integer customerId);
+    List<CustomerBorrowResponse> getCustomerBorrow(Integer bookId);
 
     @Transactional
-    void traSach(Integer chiTietId, Integer soLuongTra);
+    void returnBook(Integer id, Integer quantity);
 }

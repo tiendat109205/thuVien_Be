@@ -27,44 +27,44 @@ import java.util.Map;
 @RequestMapping("/api/phieu-muon-chi-tiet")
 public class LoanVoucherDetailController {
     @Autowired
-    private LoanVoucherDetailService phieuMuonChiTietService;
+    private LoanVoucherDetailService loanVoucherDetailService;
 
     @GetMapping("/getAll")
     public ResponseEntity<List<LoanVoucherDetailResponse>> getAll() {
-        return ResponseEntity.ok(phieuMuonChiTietService.getAll());
+        return ResponseEntity.ok(loanVoucherDetailService.getAll());
     }
 
     @PostMapping("/add")
     public ResponseEntity<?> create(@RequestBody LoanVoucherDetailRequest request) {
         try {
-            return ResponseEntity.ok(phieuMuonChiTietService.create(request));
+            return ResponseEntity.ok(loanVoucherDetailService.create(request));
         } catch (ResponseStatusException ex) {
             return ResponseEntity.status(ex.getStatusCode()).body(Map.of("message", ex.getReason()));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("message", "Lỗi không xác định xảy ra"));
+                    .body(Map.of("message", "An unknown error occurred"));
         }
     }
 
 
-    @GetMapping("/sach-da-muon/{khachHangId}")
-    public ResponseEntity<List<BookBorrowResponse>> getSachDaMuon(@PathVariable Integer khachHangId) {
-        return ResponseEntity.ok(phieuMuonChiTietService.getSachDaMuonTheoKH(khachHangId));
+    @GetMapping("/sach-da-muon/{id}")
+    public ResponseEntity<List<BookBorrowResponse>> getBookBorrow(@PathVariable Integer id) {
+        return ResponseEntity.ok(loanVoucherDetailService.getBookBorrow(id));
     }
-    @GetMapping("/khach-muon-sach/{sachId}")
-    public ResponseEntity<List<CustomerBorrowResponse>> getKhachMuonSach(@PathVariable Integer sachId) {
-        return ResponseEntity.ok(phieuMuonChiTietService.getKhachDaMuonSach(sachId));
+    @GetMapping("/khach-muon-sach/{id}")
+    public ResponseEntity<List<CustomerBorrowResponse>> getCustomerBorrow(@PathVariable Integer id) {
+        return ResponseEntity.ok(loanVoucherDetailService.getCustomerBorrow(id));
     }
-    @PutMapping("/tra-sach/{chiTietId}")
-    public ResponseEntity<?> traSach(@PathVariable Integer chiTietId, @RequestParam Integer soLuongTra) {
+    @PutMapping("/tra-sach/{id}")
+    public ResponseEntity<?> returnBook(@PathVariable Integer id, @RequestParam Integer quantity) {
         try {
-            phieuMuonChiTietService.traSach(chiTietId, soLuongTra);
-            return ResponseEntity.ok("Trả sách thành công");
+            loanVoucherDetailService.returnBook(id, quantity);
+            return ResponseEntity.ok("Returned books successfully");
         } catch (ResponseStatusException ex) {
             return ResponseEntity.status(ex.getStatusCode()).body(Map.of("message", ex.getReason()));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("message", "Lỗi không xác định xảy ra"));
+                    .body(Map.of("message", "An unknown error occurred"));
         }
     }
 }
