@@ -2,12 +2,13 @@ package com.example.quanlysach.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
-public class LoginResponse {
-    private String token;
-    private String username;
-    private String role;
+@NoArgsConstructor
+public class GenreResponse {
     private Integer id;
+    private String genreCode;
+    private String genreName;
 }

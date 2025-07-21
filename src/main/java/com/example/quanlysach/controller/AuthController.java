@@ -3,10 +3,10 @@ package com.example.quanlysach.controller;
 import com.example.quanlysach.dto.request.LoginRequest;
 import com.example.quanlysach.dto.request.RegisterRequest;
 import com.example.quanlysach.dto.response.LoginResponse;
-import com.example.quanlysach.entity.TaiKhoan;
+import com.example.quanlysach.entity.Account;
 import com.example.quanlysach.jwt.JwtProvider;
-import com.example.quanlysach.repository.TaiKhoanRepoSitory;
-import com.example.quanlysach.service.tai_khoan.CustomUserDetailsService;
+import com.example.quanlysach.repository.AccountRepoSitory;
+import com.example.quanlysach.service.account.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,16 +29,16 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtProvider jwtProvider;
-    private final TaiKhoanRepoSitory taiKhoanRepoSitory;
+    private final AccountRepoSitory taiKhoanRepoSitory;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-        System.out.println("Đăng nhập với: " + loginRequest.getTenDangNhap());
+        System.out.println("Đăng nhập với: " + loginRequest.getUsername());
 
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            loginRequest.getTenDangNhap(), loginRequest.getMatKhau())
+                            loginRequest.getUsername(), loginRequest.getPassword())
             );
             System.out.println("Xác thực thành công");
         } catch (AuthenticationException e) {
@@ -47,12 +47,12 @@ public class AuthController {
         }
 
         // Lấy chi tiết user
-        UserDetails userDetails = customUserDetailsService.loadUserByUsername(loginRequest.getTenDangNhap());
+        UserDetails userDetails = customUserDetailsService.loadUserByUsername(loginRequest.getUsername());
         String token = jwtProvider.generateToken(userDetails);
         String role = userDetails.getAuthorities().iterator().next().getAuthority();
 
         // ✅ Lấy ID tài khoản từ database
-        TaiKhoan taiKhoan = taiKhoanRepoSitory.findByTenDangNhap(userDetails.getUsername()).orElse(null);
+        Account taiKhoan = taiKhoanRepoSitory.findByUsername(userDetails.getUsername()).orElse(null);
         Integer id = (taiKhoan != null) ? taiKhoan.getId() : null;
 
         System.out.println("Token: " + token);
@@ -65,13 +65,13 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest registerRequest) {
-        if(taiKhoanRepoSitory.findByTenDangNhap(registerRequest.getTenDangNhap()).isPresent()){
+        if(taiKhoanRepoSitory.findByUsername(registerRequest.getUsername()).isPresent()){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Ten dang nhap da ton tai");
         }
-        TaiKhoan tk = new TaiKhoan();
-        tk.setTenDangNhap(registerRequest.getTenDangNhap());
-        tk.setMatKhau(new BCryptPasswordEncoder().encode(registerRequest.getMatKhau()));
-        tk.setVaiTro("ROLE_USER");
+        Account tk = new Account();
+        tk.setUsername(registerRequest.getUsername());
+        tk.setPassword(new BCryptPasswordEncoder().encode(registerRequest.getPassword()));
+        tk.setRole("ROLE_USER");
         taiKhoanRepoSitory.save(tk);
         return ResponseEntity.ok("Dang ky thanh cong");
     }
